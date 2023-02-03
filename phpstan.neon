@@ -2,7 +2,5 @@ parameters:
     level: max
     checkMissingIterableValueType: false
     checkGenericClassInNonGenericObjectType: false
-includes:
-    -  %rootDir%/../../../vendor/shipmonk/phpstan-rules/rules.neon
 rules:
     - PekralPhpStanRule\ClassMustBeDefinedAsFinal
