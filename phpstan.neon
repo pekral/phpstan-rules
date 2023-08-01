@@ -2,5 +2,3 @@ parameters:
     level: max
     checkMissingIterableValueType: false
     checkGenericClassInNonGenericObjectType: false
-rules:
-    - PekralPhpStanRule\ClassMustBeDefinedAsFinal
