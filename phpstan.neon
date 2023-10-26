@@ -5,3 +5,5 @@ parameters:
     shipmonkRules:
         uselessPrivatePropertyDefaultValue:
             enabled: true
+        forbidCheckedExceptionInCallable:
+            enabled: false
