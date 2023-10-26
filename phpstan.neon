@@ -3,7 +3,45 @@ parameters:
     checkMissingIterableValueType: false
     checkGenericClassInNonGenericObjectType: false
     shipmonkRules:
+        allowComparingOnlyComparableTypes:
+            enabled: true
+        uselessPrivatePropertyDefaultValue:
+            enabled: true
+        enforceEnumMatchRule:
+            enabled: true
+        enforceIteratorToArrayPreserveKeys:
+            enabled: true
+        enforceNativeReturnTypehint:
+            enabled: true
+        enforceReadonlyPublicProperty:
+            enabled: true
+        varTagType:
+            enabled: true
+        forbidCast:
+            enabled: true
+        forbidIdenticalClassComparison:
+            enabled: true
+        forbidMatchDefaultArmForEnums:
+            enabled: true
+        forbidProtectedEnumMethod:
+            enabled: true
+        forbidNullInAssignOperations:
+            enabled: true
+        forbidMethodCallOnMixed:
+            enabled: true
+        forbidReturnValueInYieldingMethod:
+            enabled: true
+        forbidVariableTypeOverwriting:
+            enabled: true
+        forbidUnsetClassField:
+            enabled: true
+        uselessPrivatePropertyNullability:
+            enabled: true
+        forbidUselessNullableReturn:
+            enabled: true
         uselessPrivatePropertyDefaultValue:
             enabled: true
         forbidCheckedExceptionInCallable:
             enabled: false
+        forbidFetchOnMixed:
+            enabled: true
