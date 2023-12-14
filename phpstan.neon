@@ -41,3 +41,11 @@ parameters:
             enabled: false
         forbidFetchOnMixed:
             enabled: true
+        forbidArithmeticOperationOnNonNumber:
+            enabled: true
+        forbidIncrementDecrementOnNonInteger:
+            enabled: true
+        enforceIteratorToArrayPreserveKeys:
+            enabled: true
+        forbidReturnValueInYieldingMethod:
+            enabled: true
