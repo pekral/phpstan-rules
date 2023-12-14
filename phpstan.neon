@@ -45,7 +45,3 @@ parameters:
             enabled: true
         forbidIncrementDecrementOnNonInteger:
             enabled: true
-        enforceIteratorToArrayPreserveKeys:
-            enabled: true
-        forbidReturnValueInYieldingMethod:
-            enabled: true
