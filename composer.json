@@ -4,9 +4,13 @@
   "license": ["MIT"],
   "require": {
     "php": "^8.3",
-    "phpstan/phpstan": "^1.11.5",
-    "phpstan/phpstan-deprecation-rules": "^1.2.0",
-    "phpstan/extension-installer": "^1.4.1"
+    "phpstan/phpstan": "^1.12.3",
+    "phpstan/phpstan-deprecation-rules": "^1.2.1",
+    "phpstan/extension-installer": "^1.4.3"
+  }
+  ,
+  "require-dev": {
+    "roave/security-advisories": "dev-latest"
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
