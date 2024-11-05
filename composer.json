@@ -4,7 +4,7 @@
   "license": ["MIT"],
   "require": {
     "php": "^8.3",
-    "phpstan/phpstan": "^1.12.5",
+    "phpstan/phpstan": "^1.12.7",
     "phpstan/phpstan-deprecation-rules": "^1.2.1",
     "phpstan/extension-installer": "^1.4.3"
   }
