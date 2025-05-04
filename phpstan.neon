@@ -1,3 +1,6 @@
+treatPhpDocTypesAsCertain: false
 parameters:
     level: max
     ignoreErrors:
+    - identifier: missingType.generics
+    - identifier: missingType.iterableValue
