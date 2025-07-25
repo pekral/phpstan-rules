@@ -2,6 +2,7 @@
 
 [![Latest Version](https://img.shields.io/packagist/v/pekral/phpstan-rules.svg?style=flat-square)](https://packagist.org/packages/pekral/phpstan-rules)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Downloads](https://img.shields.io/packagist/dt/pekral/phpstan-rules?style=flat-square)](https://packagist.org/packages/pekral/phpstan-rules)
 
 ---
 
@@ -41,6 +42,23 @@ parameters:
     paths:
         - src
 ```
+
+---
+
+## 🔒 Strict and Deprecation Rules
+
+This package is designed to work seamlessly with [phpstan/phpstan-strict-rules](https://github.com/phpstan/phpstan-strict-rules) and [phpstan/phpstan-deprecation-rules](https://github.com/phpstan/phpstan-deprecation-rules). These packages provide extra strict and deprecation-related rules for PHPStan, helping you enforce best practices and avoid deprecated code usage.
+
+To enable these rules, make sure you have both packages installed (they are included in the dependencies) and add them to your `phpstan.neon` configuration:
+
+```yaml
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+    - vendor/pekral/phpstan-rules/extension.neon
+```
+
+You can then configure strict rules in the `parameters > strictRules` section of your `phpstan.neon` file. For a full list of available strict rules, see the [phpstan-strict-rules documentation](https://github.com/phpstan/phpstan-strict-rules#rules).
 
 ---
 
