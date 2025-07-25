@@ -1,5 +1,6 @@
 <?php
 
-$foo = 'bar';
+declare(strict_types = 1);
+
 $bar = 'Hello!';
 echo $bar; 

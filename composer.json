@@ -32,7 +32,8 @@
     "phpstan/phpstan-strict-rules": "^2.0"
   },
   "require-dev": {
-    "roave/security-advisories": "dev-latest"
+    "roave/security-advisories": "dev-latest",
+    "pekral/phpcs-rules": "^0.4.1"
   },
   "autoload": {
     "psr-4": {
@@ -48,7 +49,8 @@
   "prefer-stable": true,
   "config": {
     "allow-plugins": {
-      "phpstan/extension-installer": true
+      "phpstan/extension-installer": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true
     }
   }
 }
