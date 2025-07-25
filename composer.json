@@ -28,7 +28,8 @@
     "php": "^8.4",
     "phpstan/phpstan": "^2.1.19",
     "phpstan/phpstan-deprecation-rules": "^2.0.3",
-    "phpstan/extension-installer": "^1.4.3"
+    "phpstan/extension-installer": "^1.4.3",
+    "phpstan/phpstan-strict-rules": "^2.0"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest"
