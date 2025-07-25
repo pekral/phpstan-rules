@@ -1,16 +1,47 @@
 {
   "name": "pekral/phpstan-rules",
-  "description": "PHPStan - custom rule set",
+  "description": "Extensible package of custom rules for PHPStan.",
+  "type": "library",
+  "keywords": [
+    "phpstan",
+    "rules",
+    "static analysis",
+    "coding standard",
+    "quality",
+    "php"
+  ],
+  "homepage": "https://github.com/pekral/phpstan-rules",
   "license": ["MIT"],
+  "authors": [
+    {
+      "name": "Petr Král",
+      "email": "kral.petr.88@gmail.com",
+      "homepage": "https://github.com/pekral",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/pekral/phpstan-rules/issues",
+    "source": "https://github.com/pekral/phpstan-rules"
+  },
   "require": {
     "php": "^8.4",
     "phpstan/phpstan": "^2.1.19",
     "phpstan/phpstan-deprecation-rules": "^2.0.3",
     "phpstan/extension-installer": "^1.4.3"
-  }
-  ,
+  },
   "require-dev": {
     "roave/security-advisories": "dev-latest"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pekral\\PhpstanRules\\": "src/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0.x-dev"
+    }
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
