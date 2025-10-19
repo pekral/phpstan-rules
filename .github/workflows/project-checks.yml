@@ -1,0 +1,77 @@
+name: Projects checks
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  phpcs-check:
+    name: PHPCS Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version:
+          - '8.4'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run PHPCS
+        run: composer phpcs
+
+  phpstan-check:
+    name: PHPStan Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version:
+          - '8.4'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run PHPStan
+        run: composer phpstan
+
+  strict-rules-check:
+    name: Strict Rules Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version:
+          - '8.4'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Check strict rules configuration
+        run: composer check-strict-rules

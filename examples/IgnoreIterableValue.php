@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-class IgnoreIterableValue
+final class IgnoreIterableValue
 {
 
     public function test(array $array): array
