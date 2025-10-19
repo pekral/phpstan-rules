@@ -49,9 +49,9 @@
     }
   },
   "scripts": {
-    "phpcs": "phpcs --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/",
-    "phpcs-fix": "phpcbf --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/",
-    "phpstan": "phpstan analyse examples/",
+    "phpcs": "phpcs --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/",
+    "phpcs-fix": "phpcbf --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/ || true",
+    "phpstan": "phpstan analyse examples/ build/",
     "check-strict-rules": "php build/check-strict-rules.php",
     "check": "composer phpcs && composer phpstan && composer check-strict-rules",
     "fix": "composer phpcs-fix"

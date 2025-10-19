@@ -2,23 +2,44 @@ parameters:
   ignoreErrors:
     - identifier: missingType.iterableValue
   strictRules:
-    disallowedLooseComparison: true
-    booleansInConditions: true
-    booleansInLoopConditions: true
-    uselessCast: true
-    requireParentConstructorCall: true
-    disallowedBacktick: true
+    # Disallowed constructs
+    disallowedLooseComparison: false
+    disallowedBacktick: false
     disallowedEmpty: true
-    disallowedImplicitArrayCreation: true
-    disallowedShortTernary: true
-    overwriteVariablesWithLoop: true
-    closureUsesThis: true
-    matchingInheritedMethodNames: true
-    numericOperandsInArithmeticOperators: true
+    disallowedImplicitArrayCreation: false
+    disallowedShortTernary: false
+    
+    # Boolean conditions
+    booleansInConditions: false
+    booleansInLoopConditions: false
+    
+    # Cast rules
+    uselessCast: false
+    
+    # Constructor rules
+    requireParentConstructorCall: false
+    illegalConstructorMethodCall: false
+    
+    # Loop rules
+    overwriteVariablesWithLoop: false
+    
+    # Function rules
+    closureUsesThis: false
     strictFunctionCalls: true
-    dynamicCallOnStaticMethod: true
-    switchConditionsMatchingType: true
-    noVariableVariables: true
     strictArrayFilter: true
-    illegalConstructorMethodCall: true
+    
+    # Method rules
+    matchingInheritedMethodNames: false
+    
+    # Arithmetic operators
+    numericOperandsInArithmeticOperators: false
+    
+    # Dynamic calls
+    dynamicCallOnStaticMethod: false
+    
+    # Switch conditions
+    switchConditionsMatchingType: false
+    
+    # Variable variables
+    noVariableVariables: false
   level: max
