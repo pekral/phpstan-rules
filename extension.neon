@@ -1,17 +1,15 @@
 # Extension configuration for phpstan-rules
 # This file provides default configuration for phpstan-rules
+#
 # Note: This package includes phpstan-strict-rules and phpstan-deprecation-rules as dependencies.
+# phpstan/extension-installer will automatically include these extensions in your project.
+#
 # These strict rules are enabled by default (matching phpstan.neon in this package):
 # - disallowedEmpty: true
 # - strictFunctionCalls: true
 # - strictArrayFilter: true
 #
 # Other rules can be enabled in your project's phpstan.neon by setting them to true.
-
-# Include the strict and deprecation rules
-includes:
-    - vendor/phpstan/phpstan-strict-rules/rules.neon
-    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
 
 parameters:
     strictRules:
