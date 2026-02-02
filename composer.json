@@ -26,14 +26,16 @@
   },
   "require": {
     "php": "^8.4",
-    "phpstan/phpstan": "^2.1.33",
+    "phpstan/phpstan": "^2.1.38",
     "phpstan/phpstan-deprecation-rules": "^2.0.3",
     "phpstan/extension-installer": "^1.4.3",
-    "phpstan/phpstan-strict-rules": "^2.0.7"
+    "phpstan/phpstan-strict-rules": "^2.0.8"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
-    "pekral/phpcs-rules": "^0.4.4"
+    "pekral/phpcs-rules": "^0.4.5",
+    "pekral/cursor-rules": "^0.3.0",
+    "pekral/rector-rules": "^0.4.7"
   },
   "autoload": {
     "psr-4": {
@@ -56,6 +58,7 @@
     }
   },
   "scripts": {
+    "build": "composer fix && composer check && composer dump-autoload",
     "phpcs": "phpcs --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/",
     "phpcs-fix": "phpcbf --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/ || true",
     "phpstan": "phpstan analyse examples/ build/",
