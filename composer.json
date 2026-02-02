@@ -58,12 +58,13 @@
     }
   },
   "scripts": {
-    "build": "composer fix && composer check && composer dump-autoload",
+    "build": "composer fix && composer check && composer dump-autoload && composer cursor-rules:install",
     "phpcs": "phpcs --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/",
     "phpcs-fix": "phpcbf --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/ || true",
     "phpstan": "phpstan analyse examples/ build/",
     "check-strict-rules": "php build/check-strict-rules.php",
     "check": "composer phpcs && composer phpstan && composer check-strict-rules",
-    "fix": "composer phpcs-fix"
+    "fix": "composer phpcs-fix",
+    "cursor-rules:install": "vendor/bin/cursor-rules install --force"
   }
 }
