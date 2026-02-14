@@ -26,16 +26,16 @@
   },
   "require": {
     "php": "^8.4",
-    "phpstan/phpstan": "^2.1.38",
-    "phpstan/phpstan-deprecation-rules": "^2.0.3",
+    "phpstan/phpstan": "^2.1.39",
+    "phpstan/phpstan-deprecation-rules": "^2.0.4",
     "phpstan/extension-installer": "^1.4.3",
-    "phpstan/phpstan-strict-rules": "^2.0.8"
+    "phpstan/phpstan-strict-rules": "^2.0.10"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
-    "pekral/phpcs-rules": "^0.4.5",
-    "pekral/cursor-rules": "^0.3.0",
-    "pekral/rector-rules": "^0.4.7"
+    "pekral/phpcs-rules": "^0.4.7",
+    "pekral/cursor-rules": "^0.4.1",
+    "pekral/rector-rules": "^0.4.8"
   },
   "autoload": {
     "psr-4": {
@@ -54,7 +54,8 @@
   "config": {
     "allow-plugins": {
       "phpstan/extension-installer": true,
-      "dealerdirect/phpcodesniffer-composer-installer": true
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "pekral/cursor-rules": true
     }
   },
   "scripts": {
