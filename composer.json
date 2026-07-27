@@ -26,10 +26,10 @@
   },
   "require": {
     "php": "^8.4",
-    "phpstan/phpstan": "^2.1.46",
-    "phpstan/phpstan-deprecation-rules": "^2.0.4",
+    "phpstan/phpstan": "^2.2.6",
+    "phpstan/phpstan-deprecation-rules": "^2.0.5",
     "phpstan/extension-installer": "^1.4.3",
-    "phpstan/phpstan-strict-rules": "^2.0.10"
+    "phpstan/phpstan-strict-rules": "^2.0.12"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
@@ -62,7 +62,7 @@
     "build": "composer fix && composer check && composer dump-autoload && composer cursor-rules:install",
     "phpcs": "phpcs --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/",
     "phpcs-fix": "phpcbf --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/ || true",
-    "phpstan": "phpstan analyse examples/ build/",
+    "phpstan": "phpstan analyse examples/ build/  --memory-limit=-1",
     "check-strict-rules": "php build/check-strict-rules.php",
     "check": "composer phpcs && composer phpstan && composer check-strict-rules",
     "fix": "composer phpcs-fix",

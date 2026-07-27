@@ -1,85 +1,112 @@
 ---
 name: refactor-entry-point-to-action
-description: "Use when refactoring any entry point logic from a controller/job/command/listener into an Action class. Enforces Action pattern rules from project.mdc and related architecture rules."
+description: "Use when refactoring controller, job, command, listener, or Livewire entry-point logic into a dedicated Action class while preserving behavior and response contracts."
 license: MIT
 metadata:
   author: "Petr Král (pekral.cz)"
 ---
 
-**Constraint:**
-- First, load all rules for Cursor editor (`.cursor/rules/.*mdc`).
-- Read `project.mdc` and all architecture rules that define Action pattern requirements before writing any code.
-- Keep all texts in the language used in the assignment.
-- Preserve behavior: refactor orchestration location, not business result.
-- In this iteration, do not report code review output to any third-party service.
-- After generating or updating code, run immediate internal code review focused on architecture and fix findings ASAP.
+## Modes
 
-**Use when:**
-- A controller entry point (or job/command/listener/**Livewire component** entry point) contains orchestration logic and must be migrated to Action pattern.
-- You want to run this skill manually in Cursor for a specific entry point method.
+This skill runs in one of two modes, selected by the caller via `MODE` (default `apply`):
 
-**Manual invocation in Cursor:**
-- Call this skill and always include:
-  - File path of the entry point class.
-  - Expected target Action class name and domain folder (or ask to propose one).
-  - Constraints if API response format/signature must remain unchanged.
-- Input template:
-  - `Refactor entry point <Class::method> in <path> to Action pattern.`
-  - `Keep behavior and response contract unchanged.`
-  - `Create/use Action in app/Actions/<Domain>/<ActionName>.php and wire entry point to delegate.`
-  - `Respect project.mdc Action architecture rules.`
+- **`apply` (default)** — perform the entry-point → Action refactoring: create / update the Action, move orchestration, run fixers / checkers, and chain the After Completion review. The Execution and Done-when steps below behave as written.
+- **`cr` (read-only lens — invoked by `@skills/code-review/SKILL.md`, `code-review-github`, `code-review-jira`)** — **never modify code, never create files, never stage / commit / push, never run fixers or checkers, and never chain `code-review` / `process-code-review`.** Scope the analysis to entry points (controller / job / command / listener / Livewire) touched by the PR diff that still hold business orchestration, and return — as markdown only — the proposed Action extraction for each: the entry-point `Class::method`, the orchestration that should move out, the target `app/Actions/<Domain>/<ActionName>` and Data Validator, and the rule reference. The CR folds these into its **Refactoring (DRY / tech debt)** section (in-scope) or **Refactoring proposals** section (out-of-scope). Execution steps 3–11 below apply to `MODE=apply` only.
 
-**Mandatory Action pattern requirements:**
-- **All business logic is allowed only in classes that follow the action pattern!**
-- Mandatory flow: `Controller/Job/Command/Listener/Livewire Component -> Action -> ModelService -> Repository (read) / ModelManager (write)`.
-- New Action must be placed under `app/Actions/**` in a domain-specific subfolder.
+## Constraints
+- Apply `@rules/refactoring/general.mdc` — incremental migration only, never a big-bang rewrite. The **Test Coverage Contract** in that rule is binding: 100% coverage of the target lines must exist in a dedicated `test(scope): cover <area> before refactor` commit *before* the entry-point change lands, and the assertion logic of those tests must remain unchanged through the refactor commit.
+- Apply `@rules/php/core-standards.mdc`.
+- If the current project uses Laravel, also apply `@rules/laravel/laravel.mdc`, `@rules/laravel/architecture.mdc`, `@rules/laravel/filament.mdc`, and `@rules/laravel/livewire.mdc`
+- Preserve behavior, signatures, response contracts, and tenant/account scope. Rewrite the entry-point code **strictly per the applied rules** — anything that would deviate (parameter count, naming, nesting, layer placement, validation home) is rewritten until it complies.
+- Do not report review output to any third-party service.
+- After changes (`MODE=apply` only), run an internal architecture-first review and fix important findings immediately. In `MODE=cr` there are no changes — emit the Action-extraction proposal and stop.
+
+## Use when
+- A controller, job, command, listener, or Livewire component method contains business orchestration that should be moved into an Action.
+- You want a thin entry point that delegates one use case to one Action.
+
+## Manual invocation in Cursor
+Always include:
+- Entry-point file path
+- Target method (`Class::method`)
+- Expected Action class name and domain folder (optional — the skill proposes a default name and domain when not provided, instead of asking the user)
+- Any response/signature compatibility constraints
+
+Example input:
+- `Refactor entry point <Class::method> in <path> to Action pattern.`
+- `Keep behavior and response contract unchanged.`
+- `Create or reuse Action in app/Actions/<Domain>/<ActionName>.php and delegate from the entry point.`
+- `Respect @rules/laravel/architecture.mdc.`
+
+## Required architecture
+- Entry point must become thin and delegate directly to an Action via `$action(...)`.
+- Create one dedicated Action per use case under `app/Actions/<Domain>/`.
 - Action class must be `final readonly`.
-- Action must expose exactly one public business entry point: `__invoke(...)` with explicit return type.
-- Action must stay clean and simple: minimal orchestration surface, no duplicated branches, no dead paths.
-- Action should be as optimized as possible for readability and runtime (avoid redundant mapping, calls, or temporary structures).
-- No direct Eloquent queries and no `DB::` calls inside the Action.
-- Action orchestrates only: data validator invocation, mapping, and delegation; heavy shared logic belongs to Services.
-- **Single-use Service/Facade method rule (Action pattern):** If the Action calls a Service or Facade method that is used only once in the entire codebase, move the business logic from that Service/Facade method directly into the Action and remove the original Service/Facade method.
-- **BaseModelService pattern:** When delegating to Services, ensure model-oriented services extend `BaseModelService` and implement `getModelManager()`, `getRepository()`, and `getModelClass()` (see `vendor/pekral/arch-app-services/examples/Services/User/UserModelService.php`). Services that do not primarily serve a single model must be refactored into Action pattern classes instead.
-- **Actions must not contain inline validation logic**: do not throw `ValidationException` directly or call `Validator::make()` inside Actions. Extract all validation into a dedicated Data Validator class under `app/DataValidators/{Domain}/`.
-- Data Validators are `final readonly` classes with constructor DI and a single `validate()` method that throws `ValidationException` on failure.
-- Actions call the Data Validator before proceeding with business orchestration.
-- Entry point method must become thin and only delegate to Action using direct invocation syntax `$action($params)`.
-- **Livewire components** are entry points: component action methods (e.g. `save()`, `submit()`, `delete()`) must delegate to Action classes. The component class lives in `app/Livewire/` with a separate Blade view in `resources/views/livewire/`. Single-file (Volt) components are forbidden.
-- **Invokeable call convention:** Always use `$action($params)` to call Actions — never use `$action->__invoke($params)`. PHP natively routes the call to `__invoke()`, making the explicit form redundant.
-- Add or update PHPDoc where needed so PHPStan can infer intent/types without ambiguity (especially DTO shapes, iterable generics, and non-obvious contracts).
+- Action must expose exactly one public business method: `__invoke(...)` with an explicit return type.
+- Action must orchestrate only: it delegates validation, mapping, and persistence to the dedicated layers.
+- **The Action returns plain domain data, never an HTTP response.** Keep `response()` / `response()->json()` / `redirect()` / `back()` / `view()` and any `Response` / `JsonResponse` / `RedirectResponse` construction in the entry point — the controller stays the owner of client↔server communication. The Action's `__invoke()` returns a Model / DTO / Collection / scalar / `void`, and the controller builds the HTTP response from it. This is part of preserving the response contract.
+- Do not place inline validation inside the Action. Extract every validation-style guard — `instanceof` / null / range / amount checks that reject or skip input via `throw`, `return`, or `continue`, plus `throw_if()` / `throw_unless()` calls — into a dedicated Data Validator (default location `app/DataValidators/<Domain>/`, but follow the project's existing convention; `Pekral\Arch\DataValidation\DataValidator` trait when the package is installed). Data Validators must use validation rules from reusable traits in `app/Concerns/`.
+- Do not place inline data mapping/transformation inside the Action. Any payload-building, model/collection mapping, key renaming, default fallback, or value formatting (e.g. a private `buildPayload()` helper) must be extracted into a Data Builder (`Pekral\Arch\DataBuilder\DataBuilder` trait when the package is installed) that the Action calls.
+- Do not use direct Eloquent queries or `DB::` calls inside the Action.
+- Keep reads in repositories (`Pekral\Arch\Repository\Mysql\BaseRepository`) and writes/updates/deletes in model managers (`Pekral\Arch\ModelManager\Mysql\BaseModelManager`) / services according to project architecture.
+- When the orchestration touches the database in a loop, prefer ModelManager batch methods (`batchUpdate`, `batchInsert`) and bulk delete/read patterns (`whereIn(...)->delete()`, `findBy{Attribute}In(...)` keyed in memory) over per-row queries (see `@rules/sql/optimalize.mdc` "Batch over per-row operations"). Per-row queries inside the Action are allowed only when iterations have an unavoidable side-effect dependency that must be justified in a code comment.
+- Add or update PHPDoc where needed for PHPStan clarity.
+- **Livewire entry points — Blade view co-refactor.** When the entry point being refactored is a Livewire component, also inspect its Blade view (`resources/views/livewire/<...>.blade.php`). Walk it against the triggers in `@rules/laravel/livewire.mdc` *HTML / Blade Layout Splitting* (repeated markup, >150 Blade lines, self-contained `wire:*` cluster, self-contained data shape, cross-page reuse, independent loading / empty / error state, distinct named UI concern). For every match, propose the extraction in the refactor plan: name the extracted concern, pick the correct component type per the rule's **Component-type decision** (Livewire only for stateful / lifecycle / server-interactive blocks; Blade for stateless presentation — never a Livewire wrapper around a pure presentational block), and place the new component under the concern's domain folder (`app/Livewire/<Domain>/` or `resources/views/components/<domain>/`). The extracted children must satisfy the **Reusability contract** in the rule (typed input, one concern, no business logic, events not parent reach-through, independently renderable, concern-based name). **Apply-mode requirement:** the extractions must land in a dedicated `refactor(scope): split <view> into reusable components` commit that follows the Action-extraction commit and respects the **Test Coverage Contract** in `@rules/refactoring/general.mdc` in spirit — every rendered branch of the touched view is covered by a Livewire / Blade feature test committed before the layout refactor, and those feature tests stay green through the refactor commit unchanged. PHP `--coverage-clover` does not measure `.blade.php` line-by-line, so the binding gate is feature-test parity, not a numeric coverage percentage on the view file. **CR-mode requirement:** the proposals must be emitted as markdown findings (`file:line`, concern name, Livewire-vs-Blade choice, target folder, rule reference) and the skill stops without modifying code.
 
-**Steps:**
-1. Analyze current implementation of the target entry point method and identify orchestration steps.
-2. Create a dedicated Action (one use case = one Action) in the correct domain folder under `app/Actions/**`.
-3. Move orchestration from controller method into Action `__invoke(...)`.
-4. Keep reads in Repository and writes in ModelManager; if missing, introduce or reuse proper layer classes.
-5. Update controller method to dependency-inject and call the Action using direct invocation syntax `$action($params)` (never `$action->__invoke($params)`).
-6. Keep account/multitenancy scope intact in all delegated calls.
-7. Ensure method signatures and returned response format stay backward compatible.
-8. Add or update PHPDoc to satisfy static analysis quality for touched PHP code.
-9. Run an internal architecture-first code review of the generated changes (no third-party reporting in this iteration).
-10. If the review finds critical or medium issues, fix them immediately and repeat the review until no such findings remain.
-11. If PHP files changed, run required project checks/fixers and resolve all issues.
-12. If new database migrations were created during the changes, run them (`php artisan migrate`) before running tests or creating a PR.
-13. Add or update tests to fully cover touched logic and preserve behavior.
+## Read, Map & Verify before refactoring (mandatory pre-flight)
 
-**Do not:**
-- Do not place validation logic (throwing `ValidationException`, calling `Validator::make()`) directly in Action classes — use Data Validators.
-- Do not keep business branching/orchestration in the controller method.
-- Do not place Action classes outside `app/Actions/**`.
-- Do not create multiple public business methods in an Action.
-- Do not bypass Repository/ModelManager boundaries.
-- Do not change unrelated behavior while refactoring.
+> **`MODE=cr`:** perform Read and Map read-only to ground the extraction proposal in the real code; Verify is the read-only audit. Do not modify code.
 
-**Definition of done:**
-- Target entry point method is thin and delegates to a dedicated Action.
-- Action respects all project Action-pattern constraints.
-- Internal architecture-focused review was executed and all critical/medium findings were fixed before completion.
-- Action implementation is clean, simple, and optimized without changing behavior.
-- Required PHPDoc for PHPStan is present on touched PHP code where needed.
-- Tests cover the refactored flow (including failure/edge paths where applicable).
-- Required project quality checks pass for changed files.
+Reading, mapping, and verifying come first; refactoring comes last. This pre-flight is **blocking** — do not edit a single line of production code until all three steps pass, and never act on an assumption you have not confirmed by reading the code.
+
+1. **Read** — open and read the actual entry point and the code it orchestrates (called Services / Repositories / ModelManagers, the Blade view for Livewire components, related tests, configuration). Confirm what the orchestration does by reading it, not by guessing from names.
+2. **Map** — map the change's blast radius: the entry point's response contract and signature, its callers and routes, the orchestration that must move into the Action, and the existing Actions / Data Validators / `app/Concerns/` traits to reuse instead of reinventing.
+3. **Verify** — check your assumptions against the real code and its observed behavior so the extraction preserves behavior, signatures, and tenant/account scope. If reading and mapping contradict the task framing, stop and surface the discrepancy instead of refactoring on a wrong premise.
+
+Only after Read, Map, and Verify are complete may the Test Coverage Gate and the extraction proceed.
+
+## Execution
+
+> **`MODE=cr`:** run steps 1–2 read-only, then emit the Action-extraction proposal described under Modes and stop — do not run steps 3–12 (they author tests, create files, run fixers, and chain reviews).
+
+1. Inspect the target entry point and identify orchestration responsibilities.
+2. Scan touched files for obvious pre-existing issues that would block or compromise the refactor. Fix only safe, relevant issues; keep unrelated cleanup out of scope.
+3. **Test Coverage Gate (blocking pre-flight).** Verify coverage of the *current* entry-point method that the refactor will touch, using the project's available coverage tooling scoped to that file (per `@rules/php/core-standards.mdc` Testing section). Every line, branch, and condition must already be at 100%. If coverage is below 100% on the target lines, **stop and write the missing tests first** via `@skills/create-test/SKILL.md`, then commit them in a dedicated `test(scope): cover <area> before refactor` commit per `@rules/git/general.mdc` Allowed Types. The pre-refactor coverage commit and the refactor commit are **always two separate commits**. Only after the gate is green may the refactor proceed.
+4. Create or reuse a dedicated Action in the correct domain folder.
+5. Move orchestration from the entry point into the Action `__invoke(...)`.
+6. Extract inline validation into a dedicated Data Validator (using validation traits from `app/Concerns/`) if needed.
+7. Preserve repository/service/manager boundaries and multitenancy/account scope.
+8. Update the entry point to delegate via `$action(...)` and keep its public contract unchanged.
+9. **Do not modify assertion logic of pre-existing tests inside the refactor commit.** The pre-refactor coverage commit fixed the behavior-preservation contract; the refactor commit changes structure only. Mechanical renames forced by the refactor itself (namespace move, constructor / argument shape forced by the extracted DTO) are the only allowed test edits and must be flagged in the commit body. If an assertion would have to change to make the refactor green, you are no longer refactoring — split the behavior change into its own commit. New tests covering newly introduced code paths (e.g. the Data Validator's failure modes that did not exist before) belong in a separate `test(scope): …` commit *after* the refactor. **After the refactor commit, re-run the coverage tooling scoped to the changed files and confirm coverage stayed 100% with the pre-existing assertions passing unchanged** — a refactored line that is no longer covered signals an untested path to fix, never a number to restore by editing the pre-refactor tests (step 4 of the **Test Coverage Contract** in `@rules/refactoring/general.mdc`).
+10. Discover available fixers and checkers (prefer Phing targets from `build.xml`/`phing.xml`; fall back to Composer scripts in `composer.json`). Run fixers first, then checkers/analyzers on all changed files. Resolve all reported issues.
+11. **Run the review inline.** Invoke `@skills/code-review/SKILL.md` directly in this skill's context, passing the refactor commit range plus the instruction to return Critical / Moderate / Minor findings with their reproducer fields. Do not dispatch the review as a subagent — run it sequentially in the current context.
+12. Run `@skills/process-code-review/SKILL.md` inline (per its own contract) and fix critical or medium findings before finishing.
+
+## Do not
+- Do not leave business orchestration in the entry point.
+- Do not place Actions outside `app/Actions/**`.
+- Do not add multiple public business methods to an Action.
+- Do not place validation logic directly inside an Action (incl. `instanceof` / null / amount skip-guards and `throw_if()` / `throw_unless()`) — extract into a Data Validator.
+- Do not place data mapping/transformation directly inside an Action — extract into a Data Builder.
+- Do not return or construct an HTTP response inside an Action — the Action returns domain data, the controller builds the response.
+- Do not bypass repository/model-manager/service boundaries.
+- Do not introduce unrelated behavioral changes.
+- Do not add speculative flexibility, configurability, or error handling while extracting the Action. The extraction moves orchestration as-is into the Action and the Data Validator; new parameters, mode switches, strategy hooks, retry knobs, or guards for scenarios the original entry point did not handle belong to a separate `feat(scope): …` commit and a separate issue. Apply the **Simplicity First** rule from `@skills/class-refactoring/SKILL.md` Refactoring Guidelines and the YAGNI rules in `@rules/php/core-standards.mdc` Design Principles.
+
+## Done when
+
+**`MODE=apply`:**
+- The target entry point is thin and delegates to a dedicated Action.
+- The Action follows project Action-pattern rules.
+- Validation is delegated to a dedicated Data Validator (using validation traits from `app/Concerns/`) when applicable.
+- Behavior, signatures, and response format remain unchanged.
+- The pre-refactor coverage commit reports 100% coverage on the entry-point lines that were refactored, and the assertion logic in those tests is unchanged through the refactor commit (mechanical renames flagged in the commit body excepted).
+- After the refactor, coverage scoped to the changed files was re-verified and **stayed** 100% with the pre-existing assertions passing unchanged.
+- New tests covering paths introduced by the refactor (e.g. Data Validator failure modes) live in a separate `test(scope): …` commit after the refactor.
+- Fixers and checkers ran clean on all changed files.
+- Internal architecture-focused review was completed and important findings were fixed.
+
+**`MODE=cr`:** the Action-extraction proposal was emitted as markdown for every qualifying entry point in the diff (entry-point `Class::method`, orchestration to move out, target Action / Data Validator, rule reference) and **no files were created or modified**.
 
 ## Output Humanization
 - Use [blader/humanizer](https://github.com/blader/humanizer) for all skill outputs to keep the text natural and human-friendly.

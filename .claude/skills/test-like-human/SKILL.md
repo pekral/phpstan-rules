@@ -1,171 +1,112 @@
 ---
 name: test-like-human
-description: Use when testing the current pull request. Find the
-  'Testing Recommendations' section in the PR conversation and test
-  the application like a senior web application tester. Follow the
-  described scenarios, use tools when needed, and produce a human-readable
-  report without technical notes.
+description: "Use when testing a pull request from a real user perspective. Follow PR testing instructions, simulate realistic scenarios, and produce a human-readable report."
 license: MIT
 metadata:
-  author: Petr Král (pekral.cz)
+  author: "Petr Král (pekral.cz)"
 ---
 
-**Constraint:**
+## Constraints
+- This skill is **stack-agnostic**. Detect the project's language, framework, and toolchain in step 1 and choose tools from that detection; the Laravel/PHP commands below are **conditional examples for Laravel projects**, not defaults. When the project IS Laravel, the Laravel-specific guidance (tinker / artisan / `APP_ENV` / `FormRequest`) stays fully in force.
+- Apply the project's own conventions where they exist. When a referenced rule or skill is present in the current project, follow it: `@rules/php/core-standards.mdc`, `@rules/git/general.mdc`, `@rules/jira/general.mdc`, `@rules/reports/general.mdc`. **If a referenced `@rules/*` file or linked skill (`pr-summary`, `code-review*`) does not exist in the current project, skip it and produce the equivalent output directly** — never fail because a Laravel-specific dependency is missing.
+- `@rules/reports/general.mdc` (when present): the tracker comment delegated to `@skills/pr-summary/SKILL.md` and any per-scenario annotations folded into it must be written in the language of the source assignment. The in-conversation dev-team follow-up may stay in English.
+- Output must be human-readable (no technical logs or internal details)
+- Focus on user-visible behavior, not implementation
 
--   For all GitHub operations, prefer GitHub CLI (`gh`) as the primary tool.
--   If `gh` is not available or cannot be used, use an available GitHub MCP server as fallback.
--   If neither `gh` nor a GitHub MCP server is available, stop and return a failed result explaining that required GitHub tools are missing.
--   Read project.mdc file!
--   First load all cursor editor rules (.cursor/rules/.\*mdc).
--   I want the texts to be in the language in which the task was assigned. Never combine multiple languages in your answer, e.g., one part in English and the other in Czech.
--   **Before starting to test**, analyze all comments and discussions in the issue so that you fully understand what the final state should be and what logic should have been created. Only then begin testing.
--   Work only with the **current pull request**. Testing instructions must be taken only from the PR conversation.
--   Specifically search for a section named **'Doporučení k testování'** or **'Testing Recommendations'**. Prefer recommendations that include direct in-app links (full URLs) for fast click-through testing.
--   Test the application like a **senior tester of web applications who is not a programmer but works in a dev team and has access to developer tools**. Focus on visible behavior, usability, clarity, consistency, and real user experience. Do not focus on implementation details, internal architecture, or framework behavior — these must not appear in the final report.
--   When the change is primarily backend (models, services, actions, jobs, commands), verify the behavior by executing the relevant code paths directly via `php artisan tinker` or an equivalent CLI client — do not limit testing to the UI when a deeper verification is possible and useful.
--   Do not invent additional requirements outside the PR instructions unless needed to verify suspicious behavior.
--   API checks may use `curl` if needed. Interactive UI testing must use the available browser MCP tools.
--   For testing API endpoints follow steps defined in project.mdc section "## Testing API endpoints like human". Never run automatic tests from codebase!
--   When testing API endpoints, always load the project's API documentation first if it is available (e.g., OpenAPI/Swagger spec, Postman collection, README API section, API docs website).
-    If no API documentation is available, find information about the endpoint via MCP (or otherwise). Use all available tools to obtain the necessary parameters for building the URL for the API!
--   The final output must be written for humans: no technical notes, terminal logs, stack details, or developer commentary.
+## Use when
+- You need to validate a pull request from a real user perspective
+- You want structured testing based on PR instructions
 
-------------------------------------------------------------------------
+This skill runs **on demand only** — never auto-chained from `@skills/code-review/SKILL.md`, `@skills/code-review-github/SKILL.md`, `@skills/code-review-jira/SKILL.md`, `@skills/process-code-review/SKILL.md`, or `@skills/resolve-issue/SKILL.md`. Invoke it explicitly via `/test-like-human` (or the equivalent in-conversation request) after the CR has been published, when a real user-perspective validation is genuinely wanted.
 
-**Steps:**
+## Required approach
 
-1.  Load the current pull request using GitHub CLI (`gh`) first. If
-    `gh` is not available, use a GitHub MCP server. If neither is
-    available, stop and return a failed result about missing GitHub tools.
-2.  Read the PR conversation: PR description, review comments, and discussion threads.
-3.  Locate the **"Doporučení k testování" / "Testing Recommendations"** section and extract all testing instructions.
-4.  If at least one extracted instruction requires API testing, first try to load the project's API documentation:
-    -   Prefer local docs in the repo first (e.g., OpenAPI/Swagger JSON/YAML, Postman collection, or a README/API docs section).
-    -   If local docs are not present, use MCP servers or installed CLI tools to locate API reference documentation.
-    -   If no documentation can be found, proceed using MCP/other tools to discover endpoints as needed.
-5.  Determine the **testing approach** for each instruction:
-    -   **UI scenario** → use browser MCP tools
-    -   **API scenario** → use `curl` or equivalent
-    -   **Backend / code execution scenario** → use `php artisan tinker` or the project's equivalent CLI client
-    -   **CLI scenario** → run the required terminal command
-6.  Convert them into realistic **user scenarios** and think like a senior tester:
-    -   what the user tries to achieve
-    -   what could confuse the user
-    -   where the flow could fail
-    -   whether the behavior feels correct and trustworthy
-    -   for backend changes: does the data end up in the correct state?
+### 1. Understand the context
+- Load the pull request (prefer `gh`, fallback to MCP tools)
+- Read description, comments, and discussions
+- Identify the expected final behavior
+- **Detect the project type and toolchain** before choosing any tool: the primary language and framework, how the app is started/served, where env/config lives, and which REPL/console the project ships. This detection drives every tool choice below.
+  - *Examples:* Laravel/PHP → `php artisan serve`, `.env`, `php artisan tinker`; Node → `npm`/`pnpm` scripts, `.env` / `process.env`, the `node` REPL; Python → `manage.py shell` / `python`, env vars; Ruby → `rails console`.
+  - Universal tools stay constant across stacks: `curl` for HTTP APIs, a browser for UI. Only the backend REPL and run commands are stack-specific.
 
-------------------------------------------------------------------------
+### 2. Extract testing instructions
+- Locate **"Testing Recommendations"**
+- Extract all scenarios
+- Do not invent new requirements unless needed to verify suspicious behavior
+- **Identify the gating mechanism for each scenario and record the exact toggle plus required value** needed to reach the changed branch (feature-flag name + value, ENV switch, query string, admin toggle, allow-listed account). This recorded toggle feeds both the step-3 reachability pre-check and the **Available behind** / first **How to test** step in the published report.
+- **Manual reproduction is the primary output of this skill.** Mapping each scenario to automated test coverage is a **separate completeness check** that **must not** replace the manual run:
+  - Map each scenario to an existing automated test; if none exists, note the gap.
+  - When the assignment does **not** restrict it, write the missing test before the run is considered complete.
+  - When the assignment explicitly says "test as a human / do not run automated tests", perform the manual run and **only note** the missing coverage — do not run or extend the suite.
+  - Build/CI-level scenarios (e.g. `composer build`, coverage thresholds) are covered by the project's CI pipeline and need no duplicate test.
 
-**UI Testing**
+### 3. Choose testing method per scenario
 
-If the instruction involves user interaction, use available browser MCP tools (navigation, snapshot, click, fill, wait, assert).
+**Reachability pre-check (before testing each scenario).** Confirm the changed branch is actually reachable in the local/test environment. Environment guards, feature flags, allow-listed accounts, and ENV switches can disable the change locally, so a "PASS" might exercise nothing related to the change — a false positive. *Examples of gates:* Laravel `if (App::environment('production'))`, a `config()` / feature-flag check; elsewhere `NODE_ENV`, build-time flags, `process.env.*`, LaunchDarkly. If the scenario is gated, either:
+- enable the gate (flip the flag, override the ENV, use an allow-listed identity), or
+- call the affected method directly with the gate forced (e.g. Laravel `php artisan tinker`; otherwise the stack's REPL).
 
-Simulate realistic user actions:
+Otherwise a "PASS" does not test anything the change touched.
 
--   navigation
--   form interaction
--   submitting data
--   moving through application flows
+Then pick the method per scenario:
+- UI → browser tools
+- **API → `curl` is mandatory whenever the PR changes the API** (see below); otherwise `curl` or equivalent (prefer API docs if available)
+- Backend logic → the stack's REPL (Laravel: `php artisan tinker`; Node: `node`; Python: `python` / `manage.py shell`; Ruby: `rails console`)
+- CLI → terminal commands
 
-Evaluate whether the flow behaves naturally and correctly.
+**Backend REPL / script setup.** Running backend verification through the project's REPL or a throwaway script may require:
+- overriding the env so the gated branch runs (Laravel example: `APP_ENV=testing`; generally, switching the runtime environment),
+- raised limits for heavy operations (Laravel/PHP example: `memory_limit`; generally, memory/time limits),
+- a local substitute for production infrastructure that does not run locally (managed DB, cloud SDK, queues).
 
-------------------------------------------------------------------------
+Use throwaway data and clean up afterwards: delete the artifacts and restore the branch / working tree to its original state.
 
-**API-Backed Scenarios**
+**API changes → mandatory `curl` verification.** If the PR changes the API — route/endpoint definitions, controllers/handlers, the validation layer, response/serialization, or status codes (Laravel examples: `routes/api.php`, API controllers, `FormRequest`, API Resources) — `curl` verification is **required**, not optional:
+- For each changed/added endpoint, issue a real `curl` request against the local environment with the correct HTTP method, authentication (token / API key), headers, and body.
+- Verify the contract: **status code**, response shape and types, validation errors on invalid input, and authorization (no token / foreign token); check idempotency where it applies.
+- Cover the happy path **and** edge/negative cases (missing required field, unauthorized access) — not just `200`.
+- If public API docs exist, verify against them and **flag any mismatch** between code and docs (code is the source of truth).
 
-If the behavior depends on API responses:
+Do not over-test — focus on meaningful validation.
 
--   use `curl` only when necessary
--   always load API documentation first if it is available; otherwise find endpoint information via MCP or other available tools
--   verify that the user-visible behavior matches expectations
--   do not expose raw request/response details in the report
+### 4. Execute as a senior tester
+For each scenario, think:
+- what the user tries to achieve
+- where the flow could fail or confuse
+- whether behavior feels correct and trustworthy
+- for backend changes: whether data ends in the correct state
 
-------------------------------------------------------------------------
+### 5. Validate results
+- Compare expected vs actual behavior
+- **Confirm the observed behavior was caused by the changed code**, not an unrelated branch or an environment that skips the change. Where it makes sense, verify the triple:
+  - positive — the fix works,
+  - negative — a different error / input does not behave like the handled case and does not pass silently,
+  - legacy preservation — behavior outside the gate stays unchanged.
+- Identify inconsistencies, confusion, or broken flows
+- Do not expose technical details in conclusions
 
-**CLI-Supported Scenarios**
+## Report format
 
-If the test requires terminal interaction:
+Local in-conversation report only — use the template defined in `templates/test-report.md` for the agent's own working notes (raw scenario results, observations, blockers). This template **must not** be posted to any tracker.
 
--   run only what is necessary
--   use the results only to support conclusions
--   keep the final report human-readable
+## Deliver
+- Reference the pull request
+- Include all tested scenarios
+- Provide overall summary
+- Highlight failed / blocked / unclear cases
+- Recommend whether the change is ready from a user perspective
 
-------------------------------------------------------------------------
+## After completion
 
-**Backend Code Execution (Tinker & CLI Clients)**
+The tracker-facing output is **produced by `@skills/pr-summary/SKILL.md` when it exists in the project**. This skill does not author its own JIRA / GitHub comment template — that responsibility belongs to `pr-summary`, which already enforces the uniform *Authors / Available behind / Summary of changes / How to test* contract. **When `pr-summary` is not present in the current project, produce the equivalent tracker comment directly, following the same contract** — do not skip the report and do not fail on the missing dependency.
 
-Use when the change is primarily **backend logic** (models, services, actions, jobs, commands, or data transformations) that cannot be fully validated through the UI or an API endpoint alone.
-
-When to use:
-
--   The changed code is not directly triggered by a user action in the browser.
--   The change affects data processing, business rules, or database state not visibly reflected in the UI.
--   A senior tester in a dev team would normally ask a developer to "run it in tinker" to confirm the result.
-
-How to execute:
-
-1.  Identify the entry point of the changed code (action class, model method, service, command, etc.) from the PR diff or description.
-2.  Use `php artisan tinker` (or an equivalent CLI client) to set up the scenario:
-    -   create or load the required model instances / test data (for Eloquent, prefer `Model::factory()`)
-    -   invoke the changed class or method directly
-    -   inspect the return value and the resulting database state
-3.  Verify that:
-    -   the output matches the expected behavior described in the PR
-    -   database records are created, updated, or deleted as intended
-    -   no unexpected side effects occur (e.g. duplicate records, wrong values, exceptions)
-4.  Translate the technical result into a **human-readable conclusion** — focus on what changed from the user's perspective, not on the implementation details.
-
-Rules:
-
--   Run only the minimum commands needed to validate the scenario.
--   Never modify production data; use test/seed data or a local development environment.
--   Do not expose raw tinker output in the final report — summarise the finding in plain language.
--   If tinker is not available, use the project's equivalent (Node.js REPL, Rails console, Django shell, etc.).
-
-------------------------------------------------------------------------
-
-**Test Result Format**
-
-For each scenario:
-
-``` markdown
-## Scenario — Short Title
-
-What was tested
-Short description of the user goal.
-
-Expected result
-What a normal user would expect.
-
-Observed result
-What actually happened.
-
-Status
-Passed / Failed / Blocked / Unclear
-
-Comment
-Human-readable note focused on user experience.
-```
-
-------------------------------------------------------------------------
-
-**Deliver**
-
-Produce a human-readable markdown report containing:
-
--   pull request reference
--   tested scenarios with result for each
--   overall summary
--   list of failed / blocked / unclear behaviors
--   recommendation whether the change appears ready from a user perspective
-
-------------------------------------------------------------------------
-
-**After completing the tasks**
-
--   Post the final human-readable test report as a comment to the **related issue** in the issue tracker (GitHub issue, JIRA ticket, etc.). Use available CLI tools or MCP servers to post it. The comment must be written in the language of the task assignment.
--   Summarize which scenarios failed or were unclear (with technical info for the developer).
+1. Hand the raw test-report markdown (from `templates/test-report.md`) and the per-scenario results to `@skills/pr-summary/SKILL.md` as input context for the publishing step (or, when absent, to your direct report).
+2. Invoke `pr-summary` with the target tracker matching the PR origin (GitHub for GitHub PRs, JIRA for JIRA-tracked work).
+3. The published tracker comment **must**:
+   - credit the **real change author(s)** in the `Authors` line — resolved from git history and PR metadata, never the agent / tester identity running this skill;
+   - include the **Available behind** line whenever the verified change is reachable only behind a test parameter (feature flag, ENV switch, query string, admin toggle, allow-listed account) — pass the gating toggle and required value recorded in step 2 so its first **How to test** step enables it;
+   - in the **How to test** section, fold the test scenarios actually executed by this skill (including pass / fail / blocked / unclear status next to each step, and the `curl` request + key contract checks for every API endpoint touched), so the published comment reflects real verification work rather than restating the PR description.
+4. Append a short non-public follow-up message to the dev team (in conversation, not on the tracker) listing failed / blocked / unclear scenarios with enough technical detail to act on them. That message is for the developers — it complements the `pr-summary` tracker comment, it does not replace it.
 
 ## Output Humanization
 - Use [blader/humanizer](https://github.com/blader/humanizer) for all skill outputs to keep the text natural and human-friendly.
