@@ -59,13 +59,12 @@
     }
   },
   "scripts": {
-    "build": "composer fix && composer check && composer dump-autoload && composer cursor-rules:install",
+    "build": "composer fix && composer check && composer dump-autoload",
     "phpcs": "phpcs --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/",
     "phpcs-fix": "phpcbf --standard=vendor/pekral/phpcs-rules/ruleset.xml examples/ build/ || true",
     "phpstan": "phpstan analyse examples/ build/  --memory-limit=-1",
     "check-strict-rules": "php build/check-strict-rules.php",
     "check": "composer phpcs && composer phpstan && composer check-strict-rules",
-    "fix": "composer phpcs-fix",
-    "cursor-rules:install": "vendor/bin/cursor-rules install --force --editor=claude"
+    "fix": "composer phpcs-fix"
   }
 }
